@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Geo2Plan Summer School 2026</title>
+  <link rel="preconnect" href="https://unpkg.com" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root{
+      --green:#246b4b;
+      --green-dark:#164733;
+      --taupe:#d8d0c4;
+      --taupe-light:#f3efe8;
+      --ink:#1d2a24;
+      --muted:#66736c;
+      --line:#e8e5df;
+      --white:#fff;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:var(--white);line-height:1.55}
+    a{color:var(--green);text-decoration:none} a:hover{text-decoration:underline}
+    .container{width:min(1180px,92vw);margin:0 auto}
+
+    .topbar{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:1000}
+    .topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:10px 0;overflow-x:auto;white-space:nowrap}
+    .brand-group{display:flex;align-items:center;gap:12px;flex:0 0 auto}
+    .brand-label{font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);font-weight:800;margin-right:2px}
+    .brand-group img{display:block;object-fit:contain;width:auto;max-width:150px;max-height:34px}
+    .brand-group.organised img.diati{max-width:180px;max-height:38px}
+    .brand-group.organised img.dist{max-width:130px;max-height:38px}
+    .brand-group.cofunded img{max-width:130px;max-height:90px}
+    .brand-group.supported img{max-width:240px;max-height:40px}
+    .brand-group.supported img.isprs-logo{max-height:80px;max-width:135px}
+
+    .hero{background:linear-gradient(90deg,rgba(216,208,196,.96),rgba(216,208,196,.72)),url('assets/background.jpg');background-size:cover;background-position:center;padding:84px 0 70px;border-bottom:1px solid var(--line)}
+    .eyebrow{font-size:13px;text-transform:uppercase;letter-spacing:.16em;color:var(--green-dark);font-weight:800;margin:0 0 16px}
+    h1{font-size:clamp(44px,7vw,82px);line-height:.96;margin:0 0 18px;color:var(--green-dark);letter-spacing:-.05em}
+    .subtitle{font-size:clamp(20px,2.3vw,31px);font-weight:750;color:var(--green);margin-bottom:20px}
+    .hero p{font-size:18px;max-width:760px;margin:0 0 28px;color:#31413a}
+    .hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+    .btn{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;padding:12px 20px;font-weight:800;border:1px solid var(--green);background:var(--green);color:#fff;box-shadow:0 8px 24px rgba(36,107,75,.18);cursor:pointer}
+    .btn.secondary{background:#fff;color:var(--green-dark);border-color:rgba(36,107,75,.24);box-shadow:none}
+    .btn:hover{text-decoration:none;filter:brightness(.98)}
+
+    .section{padding:68px 0;border-bottom:1px solid var(--line)}
+    .section.tight{padding:42px 0}
+    h2{font-size:34px;line-height:1.1;margin:0 0 18px;color:var(--green-dark);letter-spacing:-.02em}
+    h3{font-size:20px;margin:0 0 10px;color:var(--green-dark)}
+    .lead{font-size:19px;color:#34463e;max-width:900px;margin:0 0 24px}
+    .grid{display:grid;gap:24px}
+    .grid.two{grid-template-columns:1.2fr .8fr}
+    .grid.three{grid-template-columns:repeat(3,1fr)}
+    .grid.four{grid-template-columns:repeat(4,1fr)}
+    .card{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 8px 26px rgba(22,71,51,.06)}
+    .card-body{padding:22px}
+    .card img{width:100%;height:210px;object-fit:cover;display:block}
+    .info-card{background:var(--taupe-light);border:1px solid var(--line);border-radius:18px;padding:24px}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:-38px;position:relative;z-index:2}
+    .stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;text-align:center;box-shadow:0 12px 32px rgba(22,71,51,.10)}
+    .stat strong{display:block;font-size:38px;line-height:1;color:var(--green-dark);letter-spacing:-.04em}
+    .stat span{font-size:13px;color:var(--muted);font-weight:750;text-transform:uppercase;letter-spacing:.08em}
+    ul.clean{margin:0;padding-left:20px;color:#34463e}
+    ul.clean li{margin:6px 0}
+
+    .pill-list{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 0}
+    .pill{background:#fff;border:1px solid rgba(36,107,75,.25);color:var(--green-dark);padding:8px 12px;border-radius:999px;font-size:14px;font-weight:750}
+    .schedule{display:grid;gap:14px;margin-top:24px}
+    .day{display:grid;grid-template-columns:116px 1fr;gap:18px;padding:18px;border:1px solid var(--line);border-radius:16px;background:#fff}
+    .day .date{font-weight:850;color:var(--green-dark)}
+    .day p{margin:0;color:#34463e}
+    .more-info{margin-top:12px;background:var(--taupe-light);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+    .more-info summary{cursor:pointer;color:var(--green-dark);font-weight:850;list-style:none;display:flex;align-items:center;gap:8px}
+    .more-info summary::-webkit-details-marker{display:none}
+    .more-info summary::before{content:"▸";font-size:13px;color:var(--green);transition:transform .18s ease}
+    .more-info[open] summary::before{transform:rotate(90deg)}
+    .more-info p{margin:10px 0 0;color:#34463e}
+    .more-info img{width:100%;max-height:210px;object-fit:cover;border-radius:10px;border:1px solid var(--line);margin-top:12px;background:#fff}
+    .more-info-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .tiny-btn{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;padding:8px 12px;font-size:13px;font-weight:850;border:1px solid rgba(36,107,75,.25);background:#fff;color:var(--green-dark)}
+    .tiny-btn.primary{background:var(--green);color:#fff;border-color:var(--green)}
+    .tiny-btn:hover{text-decoration:none;filter:brightness(.98)}
+
+    #map{height:430px;border-radius:18px;border:1px solid var(--line);overflow:hidden;z-index:1;background:var(--taupe-light)}
+    .map-note{font-size:14px;color:var(--muted);margin-top:10px}
+    .legend{display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:14px;color:#34463e;margin-top:10px}
+    .legend-line{display:inline-block;width:34px;height:0;border-top:4px solid var(--green);vertical-align:middle;margin-right:6px}
+    .legend-line.bus{border-color:#2c6fb8}
+    .legend-line.walk{border-color:#246b4b;border-top-style:dashed}
+    .venue-photo{width:100%;height:260px;object-fit:cover;border-radius:18px;border:1px solid var(--line);margin:18px 0 4px;box-shadow:0 8px 26px rgba(22,71,51,.06)}
+    .groupwork-photo{width:100%;height:320px;object-fit:cover;border-radius:18px;border:1px solid var(--line);margin-top:22px;box-shadow:0 8px 26px rgba(22,71,51,.06)}
+    .download-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
+    .notice{margin-top:18px;padding:16px 18px;border-left:5px solid var(--green);background:var(--taupe-light);border-radius:12px;color:#34463e}
+
+    .people{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .person{display:flex;gap:14px;align-items:center;padding:16px;border:1px solid var(--line);border-radius:14px;background:#fff}
+    .person img{width:58px;height:58px;border-radius:50%;object-fit:cover;border:1px solid var(--line);flex:0 0 auto;background:var(--taupe-light)}
+    .person a{display:block;color:var(--green-dark);font-weight:850}
+    .person span{display:block;color:var(--muted);font-size:14px}
+    .partners-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:stretch}
+    .partner{border:1px solid var(--line);border-radius:18px;padding:24px;background:#fff;display:flex;flex-direction:column;gap:16px;align-items:flex-start;justify-content:flex-start}
+    .partner-logo-wrap{width:100%;height:86px;display:flex;align-items:center;justify-content:flex-start;border-bottom:1px solid var(--line);padding-bottom:14px}
+    .partner img{max-height:100px;max-width:230px;object-fit:contain;display:block}
+    .partner img.isprs-partner{max-height:90px;max-width:180px}
+    .partner p{margin:3px 0 0;color:#34463e}
+    .footer{background:var(--green-dark);color:#dfe9e3;padding:34px 0;font-size:14px}
+
+    @media(max-width:860px){
+      .topbar-inner{justify-content:flex-start}.brand-group img{max-height:32px;max-width:140px}.brand-label{font-size:9px}
+      .brand-group.supported img.isprs-logo{max-height:44px;max-width:105px}
+      .hero{padding:62px 0 56px}.stats,.grid.two,.grid.three,.grid.four,.people,.partners-grid{grid-template-columns:1fr}.day{grid-template-columns:1fr}.card img{height:190px}.groupwork-photo{height:230px}
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner" aria-label="Institutional logos">
+      <div class="brand-group organised">
+        <span class="brand-label">Organised by</span>
+        <img class="diati" src="assets/diati.png" alt="DIATI - Politecnico di Torino" />
+        <img class="dist" src="assets/dist.png" alt="DIST - Politecnico di Torino" />
+      </div>
+      <div class="brand-group cofunded">
+        <span class="brand-label">Co-funded by</span>
+        <img src="assets/wikimedia.svg" alt="Wikimedia" />
+      </div>
+      <div class="brand-group supported">
+        <span class="brand-label">Supported by</span>
+        <img src="assets/parco_alpi_cozie.png" alt="Protected Areas of the Cottian Alps" />
+        <img class="isprs-logo" src="assets/ISPRS.jpg" alt="ISPRS Technical Commission V" />
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container">
+      <p class="eyebrow">Rifugio Amprimo · Orsiera Rocciavrè Natural Park · Susa Valley, Italy</p>
+      <h1>Geo<sup>2</sup>Plan</h1>
+      <div class="subtitle">Geomatics for Geology and Planning Summer School</div>
+      <p>From geospatial data to climate-resilient mountain planning: a field-based international programme where MSc students collect data, interpret mountain processes and translate evidence into planning-oriented outputs.</p>
+      <div class="hero-actions">
+        <a class="btn" href="https://docs.google.com/forms/d/e/1FAIpQLSfgeFeQ72NOoZgd2bywAHf9C6KcQWN-1AR4q1UXF9bd6Qw71w/viewform?usp=dialog" target="_blank">Pre-apply now!</a>
+        <a class="btn secondary" href="#programme">View programme</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="stats" aria-label="Key facts">
+      <div class="stat"><strong>7</strong><span>days in the heart of the western Italian Alps</span></div>
+      <div class="stat"><strong>23</strong><span>maximum places, three available scholarships</span></div>
+      <div class="stat"><strong>€200</strong><span>all-inclusive flat participation fee</span></div>
+      <div class="stat"><strong>6+</strong><span>expert talks & international lectures</span></div>
+    </div>
+  </div>
+
+  <main>
+    <section class="section" id="about">
+      <div class="container grid two">
+        <div>
+          <h2>About the Summer School</h2>
+          <p class="lead">Geo2Plan is a 7-day international Summer School held from <strong>30 August to 6 September 2026</strong> in the Orsiera Rocciavrè Natural Park, with all activities based at Rifugio Amprimo, 1,385 m a.s.l.</p>
+          <p>The programme integrates geomatics, geology and spatial planning to address climate-change-related challenges in mountain territories. Students work in interdisciplinary teams on a complete real-world workflow: field data acquisition, map-based processing, geological interpretation and planning-oriented recommendations.</p>
+          <div class="pill-list">
+            <span class="pill">Field-based learning</span><span class="pill">Open geodata</span><span class="pill">Climate adaptation</span><span class="pill">Team project</span>
+          </div>
+        </div>
+        <div class="info-card">
+          <h3>Who can apply?</h3>
+          <p>MSc students in Civil and Environmental Engineering, Geology, Territorial, Urban, Environmental and Landscape Planning, and related disciplines.</p>
+          <ul class="clean">
+            <li>International MSc students in equivalent programmes are eligible.</li>
+            <li>Selection is based on motivation letter.</li>
+            <li>Geographical distribution and academic background will be considered.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="learning">
+      <div class="container">
+        <h2>Three learning pillars</h2>
+        <p class="lead">The school combines technical data production, geological interpretation and spatial planning in one coherent educational framework.</p>
+        <div class="grid three">
+          <article class="card">
+            <img src="assets/geomatics.jpg" alt="Geomatics field activity with UAV" />
+            <div class="card-body"><h3>Geomatics</h3><p>GNSS, UAV photogrammetry, LiDAR, remote sensing and GIS for updated spatial data and reusable geoinformation.</p></div>
+          </article>
+          <article class="card">
+            <img src="assets/geology.jpg" alt="Mountain geology fieldwork" />
+            <div class="card-body"><h3>Geology</h3><p>Field observation and interpretation of geological and geomorphological features, processes, sensitivities and constraints.</p></div>
+          </article>
+          <article class="card">
+            <img src="assets/planning.png" alt="Mountain territorial planning context" />
+            <div class="card-body"><h3>Planning</h3><p>Use of spatial evidence to define strategies for climate adaptation, sustainable development and territorial management.</p></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="venue">
+      <div class="container grid two">
+        <div>
+          <h2>Venue and access</h2>
+          <p class="lead">All activities take place at <strong>Rifugio Amprimo</strong>, inside the Orsiera Rocciavrè Natural Park.</p>
+          <p>The refuge is located at 1,385 m a.s.l. and can be reached from Paradiso delle Rane or Borgata Sagnette with an easy 15–20 minute walk. Participants meet at Bussoleno railway station and reach the beginning of the walking path by organised bus transfer.</p>
+
+          <img class="venue-photo" src="assets/amprimo.jpg" alt="Rifugio Amprimo in the Orsiera Rocciavrè Natural Park" />
+
+          <div class="notice">
+            <strong>Physical requirements:</strong> field activities and surveys require participants to be in good health and in adequate physical condition for walking in mountain terrain and carrying out outdoor data collection activities.
+          </div>
+
+          <p style="margin-top:18px"><a href="https://www.parchialpicozie.it/en/p/orsiera-rocciavre/" target="_blank" rel="noopener">Visit the Orsiera Rocciavrè Natural Park website</a></p>
+          <p><a href="https://www.parchialpicozie.it/en/punti/rifugio-amprimo/" target="_blank" rel="noopener">Rifugio Amprimo information</a></p>
+        </div>
+        <div>
+          <div id="map" aria-label="Map of Rifugio Amprimo and access points"></div>
+          <div class="legend"><span><i class="legend-line bus"></i>Bus route GPX</span><span><i class="legend-line walk"></i>Walking route GPX</span></div>
+          <div class="download-row">
+            <a class="btn secondary gpx-download" href="gpx/bus_route.gpx" download="bus_route.gpx">Download bus GPX</a>
+            <a class="btn secondary gpx-download" href="gpx/walk_route.gpx" download="walk_route.gpx">Download walking GPX</a>
+          </div>
+          <p class="map-note"></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="programme">
+      <div class="container">
+        <h2>Programme in brief</h2>
+        <p class="lead">
+          The week is designed as a complete field-to-decision workflow: students first understand the climate and territorial context, then collect and process spatial data, interpret geological and ecological processes, and finally transform the results into planning-oriented outputs.
+        </p>
+        <div class="schedule">
+
+          <div class="day" id="day-1">
+            <div class="date">Day 1<br><small>30 Aug</small></div>
+            <div>
+              <p><strong>Arrival and orientation.</strong> Students meet at Bussoleno railway station, reach Rifugio Amprimo by organized bus, settle in, meet the teaching team and are introduced to the study area, logistics and programme. Ice breaking with Climate Fresk game.</p>
+              <details class="more-info">
+                <summary>Climate Fresk</summary>
+                <p>Climate Fresk is a collaborative boardgame used as an ice-breaking activity and as a first shared framework for the Summer School. Guided by certified DIATI facilitators, students explore the causes and impacts of climate change and discuss possible responses in an interactive and team-based setting.</p>
+                
+                <div class="more-info-actions"><a class="tiny-btn primary" href="https://climatefresk.org/" target="_blank" rel="noopener">Climate Fresk website</a></div>
+              </details>
+            </div>
+          </div>
+
+          <div class="day" id="day-2">
+            <div class="date">Day 2<br><small>31 Aug</small></div>
+            <div>
+              <p><strong>Geomatics data acquisition.</strong> Introduction to main geomatics techniques: GNSS, UAV photogrammetry, LiDAR and Copernicus land-cover products. Outdoors data collection of real spatial data around the refuge using geomatics instruments.</p>
+              <details class="more-info">
+                <summary>Daniele Cat Berro</summary>
+                <p>Daniele Cat Berro is a contributor to the Italian Meteorological Society and editor of the magazine and website Nimbus, he is involved in the analysis of meteorological events and long-term climate data series, climate and glacier monitoring in the Western Alps, and in the dissemination of atmospheric and environmental sciences.</p>
+                
+                <div class="more-info-actions"><a class="tiny-btn primary" href="https://www.nimbus.it/" target="_blank" rel="noopener">Nimbus website</a></div>
+              </details>
+            </div>
+          </div>
+
+          <div class="day" id="day-3">
+            <div class="date">Day 3<br><small>1 Sept</small></div>
+            <div>
+              <p><strong>Geological field interpretation.</strong> Field observation and mapping of the main geological and geomorphological features of the study area, supported by Politecnico di Torino staff and Alberto Corno for geological cartography. The day moves from field observation to a guided interpretation discussion.</p>
+              <details class="more-info">
+                <summary>Alberto Corno</summary>
+                <p>Alberto Corno is a geologist and young academic at the Dipartimento di Scienze della Terra of the Università degli Studi di Torino (University of Turin), where he is affiliated as a researcher and/or faculty member in the Earth Sciences department.  He is part of the ARG Project – Geological Map of Italy 1:50,000, the national Italian program for producing the official Geological Map of Italy at 1:50,000 scale.</p>
+                
+              </details>
+              <details class="more-info">
+                <summary>Luca Giunti</summary>
+                <p>Luca Giunti is a park ranger with the Protected Areas of the Alpi Cozie. A naturalist and photographer (#sbaluf), he is involved in EU LIFE projects and is the author of both popular science and scientific articles. He’s an expert in the Orsiera Rocciavrè Park’s fauna and flora, ecosystem structure and dynamics, with a focus on natural processes and environmental interactions.</p>
+                
+                <div class="more-info-actions"><a class="tiny-btn primary" href="https://www.parchialpicozie.it/en/" target="_blank" rel="noopener">Protected Areas website</a></div>
+              </details>
+            </div>
+          </div>
+
+          <div class="day" id="day-4">
+            <div class="date">Day 4<br><small>2 Sept</small></div>
+            <div>
+              <p><strong>Planning, society and mountain territories.</strong> Translation of climate and environmental information into territorial analysis and adaptation strategies. Afternoon visit to Alpeggio "Balmetta" and lecture by Prof. Milan Kobal</p>
+              <details class="more-info">
+                <summary>Alpeggio Balmetta</summary>
+                <p>The visit to Alpeggio Balmetta is organised as a field-based “merenda” linking planning with lived mountain economies. Students meet a traditional alpine pasture manager and discuss production, marginality, accessibility and landscape management, followed by tasting of local Park-certified products.</p>
+                
+                <div class="more-info-actions"><a class="tiny-btn primary" href="https://www.parchialpicozie.it/it/punti/alpeggio-balmetta-vecchia/" target="_blank" rel="noopener">Alpeggio page</a></div>
+              </details>
+              <details class="more-info">
+                <summary>Milan Kobal</summary>
+                <p>Milan Kobal is an Adjunct Professor at the University of Ljubljana, specializing in forest monitoring, remote sensing, and spatial analysis of natural resources. His research focuses on the integration of Earth observation data for forest management, ecosystem assessment, and environmental planning.</p>
+                
+              </details>
+            </div>
+          </div>
+
+          <div class="day" id="day-5">
+            <div class="date">Day 5<br><small>3 Sept</small></div>
+            <div>
+              <p><strong>Integrated mountain field day and data processing.</strong> Students take part in a guided field outing combining environmental interpretation, mountain processes and territorial dynamics. In the afternoon, PhD Frederic Berger' lecure.</p>
+              <details class="more-info">
+                <summary>Frédéric Berger</summary>
+                <p>Frédéric Berger is a senior research scientist at INRAE, specializing in mountain ecology, climate change impacts, and long-term environmental monitoring in mountain ecosystems. His research addresses ecosystem dynamics, biodiversity, and the use of ecological data to support sustainable land and risk management strategies.</p>
+                
+              </details>
+            </div>
+          </div>
+
+          <div class="day" id="day-6">
+            <div class="date">Day 6<br><small>4 Sept</small></div>
+            <div>
+              <p><strong>Open mapping and advanced geomatics workflow.</strong> Students work with Wikimedia in a Mapping Party to select, validate and publish geographic information on OpenStreetMap. The day closes with an advanced lecture by Francesco Nex on integrated geomatics workflows for mountain environments.</p>
+              <details class="more-info">
+                <summary>the Mapping Party</summary>
+                <p>The Mapping Party is a collaborative event where experienced mappers and beginners work together to improve OpenStreetMap. Students use the knowledge and data collected during the previous days to identify useful geographic information, validate it with faculty guidance and contribute to open geodata.</p>
+                
+                <div class="more-info-actions"><a class="tiny-btn primary" href="https://www.openstreetmap.org/" target="_blank" rel="noopener">OpenStreetMap</a></div>
+              </details>
+              <details class="more-info">
+                <summary>Francesco Nex</summary>
+                <p>Francesco Nex is Adjunct Professor in Earth Observation Science at the University of Twente, where he develops innovative UAV, photogrammetry and deep learning methods for remote sensing and 3D geo-data analysis. He is author of 150+ publications in international journals and conferences.</p>
+                
+              </details>
+            </div>
+          </div>
+
+          <div class="day" id="day-7">
+            <div class="date">Day 7<br><small>5 Sept</small></div>
+            <div>
+              <p><strong>Final team project and presentation.</strong> Interdisciplinary groups integrate the week’s data and interpretations into planning-oriented outputs. Final results are presented and discussed with faculty and Park representatives.</p>
+              <details class="more-info">
+                <summary>final group outputs</summary>
+                <p>Each group develops an integrated territorial interpretation of the study area, combining geomatics-derived datasets, geological and geomorphological observations, and planning-oriented reflections related to climate adaptation and mountain resilience. Outputs may include maps, GIS layers, environmental interpretations, open geodata contributions and planning recommendations.</p>
+                <img src="assets/groupwork.jpg" alt="Students working in groups on integrated outputs" />
+              </details>
+            </div>
+          </div>
+
+<div class="day" id="day-8">
+            <div class="date">Day 8<br><small>6 Sept</small></div>
+            <div>
+              <p><strong>Back to Bussoleno Train Station by organized bus.</strong> 
+              </details>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="outputs">
+      <div class="container grid two">
+        <div>
+          <h2>Final team project</h2>
+          <p class="lead">Each group develops an integrated project for a real mountain territory.</p>
+          <ul class="clean">
+            <li>Updated geospatial layers and maps from field and remote data.</li>
+            <li>Geological and geomorphological interpretation of processes and sensitivities.</li>
+            <li>Planning-oriented recommendations for climate adaptation and sustainable territorial management.</li>
+            <li>A final presentation in the presence of Park representatives.</li>
+          </ul>
+        </div>
+        <div>
+          <div class="info-card">
+            <h3>Open data dimension</h3>
+            <p>With the support of Wikimedia, selected validated data produced during the Summer School will contribute to OpenStreetMap and open geoinformation dissemination.</p>
+          </div>
+          <img class="groupwork-photo" src="assets/groupwork.jpg" alt="Students working in groups during a field-based planning exercise" />
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="staff">
+      <div class="container">
+        <h2>Teaching staff and invited experts</h2>
+        <p class="lead">The programme is delivered by Politecnico di Torino staff and external lecturers from academia, research institutions and science communication.</p>
+
+        <h3>Politecnico di Torino</h3>
+        <div class="people">
+          <div class="person"><img src="assets/people/belcore.png" alt="Elena Belcore"><div><a href="https://www.polito.it/en/staff?p=elena.belcore" target="_blank" rel="noopener">Elena Belcore, Geo2Plan Coordinator</a><span>DIATI · Geomatics</span></div></div>
+          <div class="person"><img src="assets/people/pede.jpg" alt="Elena Pede"><div><a href="https://www.polito.it/en/staff?p=elena.pede" target="_blank" rel="noopener">Elena Pede, Geo2Plan Co-coordinator</a><span>DIST · Spatial Planning</span></div></div>
+          <div class="person"><img src="assets/people/taddia.jpg" alt="Glenda Taddia"><div><a href="https://www.polito.it/en/staff?p=glenda.taddia" target="_blank" rel="noopener">Glenda Taddia</a><span>DIATI · Applied Geology</span></div></div>
+          <div class="person"><img src="assets/people/piras.jpg" alt="Marco Piras"><div><a href="https://www.polito.it/en/staff?p=marco.piras" target="_blank" rel="noopener">Marco Piras</a><span>DIATI · Geomatics</span></div></div>
+          <div class="person"><img src="assets/people/dabove.jpg" alt="Paolo Dabove"><div><a href="https://www.polito.it/en/staff?p=paolo.dabove" target="_blank" rel="noopener">Paolo Dabove</a><span>DIATI · Geomatics</span></div></div>
+          <div class="person"><img src="assets/people/dipietra.jpg" alt="Vincenzo Di Pietra"><div><a href="https://www.polito.it/en/staff?p=vincenzo.dipietra" target="_blank" rel="noopener">Vincenzo Di Pietra</a><span>DIATI · Geomatics</span></div></div>
+          <div class="person"><img src="assets/people/grasso.png" alt="Nives Grasso"><div><a href="https://www.polito.it/en/staff?p=nives.grasso" target="_blank" rel="noopener">Nives Grasso</a><span>DIATI · Topography Laboratory</span></div></div>
+          <div class="person"><img src="assets/people/vagnon.png" alt="Federico Vagnon"><div><a href="https://www.polito.it/en/staff?p=federico.vagnon" target="_blank" rel="noopener">Federico Vagnon</a><span>DIATI · Applied Geology</span></div></div>
+          <div class="person"><img src="assets/people/gizzi.jpg" alt="Martina Gizzi"><div><a href="https://www.polito.it/en/staff?p=martina.gizzi" target="_blank" rel="noopener">Martina Gizzi</a><span>DIATI · Hydrogeology</span></div></div>
+          <div class="person"><img src="assets/people/staricco.png" alt="Luca Staricco"><div><a href="https://www.polito.it/en/staff?p=luca.staricco" target="_blank" rel="noopener">Luca Staricco</a><span>DIST · Spatial Planning</span></div></div>
+        </div>
+
+        <h3 style="margin-top:28px">International lecturers and guest talks</h3>
+        <div class="people">
+          <div class="person"><img src="assets/people/nex.png" alt="Francesco Nex"><div><a href="https://people.utwente.nl/f.nex" target="_blank" rel="noopener">Francesco Nex</a><span>University of Twente · UAV and photogrammetry</span></div></div>
+          <div class="person"><img src="assets/people/kobal.jpg" alt="Milan Kobal"><div><a href="#" target="_blank" rel="noopener">Milan Kobal</a><span>University of Ljubljana · Mountain geomatics</span></div></div>
+          <div class="person"><img src="assets/people/berger.jpg" alt="Frédéric Berger"><div><a href="#" target="_blank" rel="noopener">Frédéric Berger</a><span>INRAE · Protective forests and rockfalls</span></div></div>
+          <div class="person"><img src="assets/people/corno.png" alt="Alberto Corno"><div><a href="#" target="_blank" rel="noopener">Alberto Corno</a><span>University of Turin · Geological mapping</span></div></div>
+          <div class="person"><img src="assets/people/CMCC.jpg" alt="TBC"><div><a href="#" target="_blank" rel="noopener">CMCC</a><span>Climate and society</span></div></div>
+          <div class="person"><img src="assets/people/catberro.jpg" alt="Daniele Cat Berro"><div><a href="https://www.lastampa.it/autori/daniele_cat_berro/" target="_blank" rel="noopener">Daniele Cat Berro</a><span>Nimbus / SMI · Climate communication</span></div></div>
+          <div class="person"><img src="assets/people/giunti.jpg" alt="Luca Giunti"><div><a href="#" target="_blank" rel="noopener">Luca Giunti</a><span>Protected Areas of the Cottian Alps · Park ecosystems</span></div></div>
+          <div class="person"><img src="assets/people/wikimedia.png" alt="wikimedia"><div><a href="https://www.wikimedia.it/" target="_blank" rel="noopener">Wikimedia Italia</a><span>Wikimedia Italia</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="costs">
+      <div class="container grid two">
+        <div>
+          <h2>Costs, scholarships and admission</h2>
+          <p class="lead">Participation requires a <strong>€200 flat fee</strong>.</p>
+          <p>The fee includes organised bus transfer from/to Bussoleno railway station, board (3 meals per day) and accommodation for seven days, and all educational and extracurricular activities included in the programme.</p>
+          <p>Scholarships are available. The Summer School is limited to 25 participants.</p>
+        </div>
+        <div class="info-card" id="apply">
+          <h3>Pre-application</h3>
+          <p>Applicants are required to submit a motivation letter. The selection process considers academic background, internationalisation and geographical distribution.</p>
+          <a class="btn" href="https://docs.google.com/forms/d/e/1FAIpQLSfgeFeQ72NOoZgd2bywAHf9C6KcQWN-1AR4q1UXF9bd6Qw71w/viewform?usp=dialog" target="_blank">Pre-application form</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section tight" id="supporters">
+      <div class="container">
+        <h2>Co-funder and supporters</h2>
+        <div class="partners-grid">
+          <div class="partner">
+            <div class="partner-logo-wrap"><img src="assets/wikimedia.svg" alt="Wikimedia" /></div>
+            <div><h3>Co-funded by Wikimedia</h3><p>Wikimedia supports the open knowledge and collaborative mapping dimension of the Summer School.</p></div>
+          </div>
+          <div class="partner">
+            <div class="partner-logo-wrap"><img src="assets/parco_alpi_cozie.png" alt="Protected Areas of the Cottian Alps" /></div>
+            <div><h3>Supported by the Orsiera Rocciavrè Natural Park</h3><p>The Park Authority supports field activities and the territorial framework of the programme.</p></div>
+          </div>
+          <div class="partner">
+            <div class="partner-logo-wrap"><img class="isprs-partner" src="assets/ISPRS.jpg" alt="ISPRS Technical Commission V" /></div>
+            <div><h3>Supported by the International Society for Photogrammetry and Remote Sensing</h3><p>ISPRS Technical Commission V, Working Group V/3 on Open Source Promotion and Web-based Resource Sharing supports the initiative.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">Geo2Plan · Geomatics for Geology and Planning Summer School · 30 August – 6 September 2026</div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map', {scrollWheelZoom:false}).setView([45.099172, 7.145088], 13);
+    L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+      maxZoom: 17,
+      attribution: 'Map data © OpenStreetMap contributors, SRTM | Map style © OpenTopoMap'
+    }).addTo(map);
+
+    L.marker([45.099172, 7.145088]).addTo(map).bindPopup('<strong>Rifugio Amprimo</strong><br>1,385 m a.s.l.');
+    L.marker([45.137, 7.145]).addTo(map).bindPopup('<strong>Bussoleno railway station</strong><br>Meeting point');
+    L.circleMarker([45.1015, 7.1395], {radius:7,color:'#246b4b',fillColor:'#246b4b',fillOpacity:.85}).addTo(map).bindPopup('Approximate walking path start');
+
+    function pointsFromGPX(xml){
+      const trkpts = Array.from(xml.getElementsByTagNameNS('*', 'trkpt'));
+      const rtepts = Array.from(xml.getElementsByTagNameNS('*', 'rtept'));
+      const wpts = Array.from(xml.getElementsByTagNameNS('*', 'wpt'));
+      const rawPoints = trkpts.length ? trkpts : (rtepts.length ? rtepts : wpts);
+      return rawPoints.map(pt => {
+        const lat = Number(pt.getAttribute('lat'));
+        const lon = Number(pt.getAttribute('lon'));
+        return [lat, lon];
+      }).filter(p => Number.isFinite(p[0]) && Number.isFinite(p[1]));
+    }
+
+    async function drawGPX(url, options){
+      const response = await fetch(url, {cache:'no-store'});
+      if(!response.ok) throw new Error(url + ' not found');
+      const text = await response.text();
+      const xml = new DOMParser().parseFromString(text, 'application/xml');
+      const parserError = xml.querySelector('parsererror');
+      if(parserError) throw new Error(url + ' is not valid XML/GPX');
+      const points = pointsFromGPX(xml);
+      if(points.length < 2) throw new Error(url + ' must contain at least two track, route or waypoint points');
+      const line = L.polyline(points, options).addTo(map);
+      return line.getBounds();
+    }
+
+    Promise.allSettled([
+      drawGPX('gpx/bus_route.gpx', {color:'#2c6fb8', weight:5, opacity:.95, lineJoin:'round'}),
+      drawGPX('gpx/walk_route.gpx', {color:'#246b4b', weight:5, opacity:.95, dashArray:'6 6', lineJoin:'round'})
+    ]).then(results => {
+      const bounds = results.filter(r => r.status === 'fulfilled').map(r => r.value);
+      results.filter(r => r.status === 'rejected').forEach(r => console.warn(r.reason));
+      if(bounds.length){
+        const combined = bounds.slice(1).reduce((b, x) => b.extend(x), bounds[0]);
+        map.fitBounds(combined, {padding:[24,24]});
+      }
+    });
+
+    document.querySelectorAll('.gpx-download').forEach(link => {
+      link.addEventListener('click', async event => {
+        event.preventDefault();
+        try{
+          const response = await fetch(link.href, {cache:'no-store'});
+          if(!response.ok) throw new Error('Download failed');
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = link.getAttribute('download') || 'route.gpx';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+        } catch(error){
+          window.open(link.href, '_blank');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
