@@ -457,7 +457,7 @@
 
     L.marker([45.099172, 7.145088]).addTo(map).bindPopup('<strong>Rifugio Amprimo</strong><br>1,385 m a.s.l.');
     L.marker([45.137, 7.145]).addTo(map).bindPopup('<strong>Bussoleno railway station</strong><br>Meeting point');
-    L.Marker([45.10279892617187, 7.165540277295891], {radius:7,color:'#246b4b',fillColor:'#246b4b',fillOpacity:.85}).addTo(map).bindPopup(' "Paradiso delle Rane" walking path start');
+    L.circleMarker([45.1027, 7.1655], {radius:7,color:'#246b4b',fillColor:'#246b4b',fillOpacity:.85}).addTo(map).bindPopup(' "Paradiso delle Rane" walking path start');
 
     function pointsFromGPX(xml){
       const trkpts = Array.from(xml.getElementsByTagNameNS('*', 'trkpt'));
